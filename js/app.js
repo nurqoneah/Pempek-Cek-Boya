@@ -1756,6 +1756,8 @@ CREATE TABLE IF NOT EXISTS customers (
   id VARCHAR(50) PRIMARY KEY,
   name VARCHAR(255) UNIQUE NOT NULL,
   phone VARCHAR(50),
+  points INTEGER DEFAULT 0,
+  tier VARCHAR(50) DEFAULT 'BRONZE',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
