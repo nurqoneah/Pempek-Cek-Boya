@@ -56,6 +56,14 @@ window.db = {
     localStorage.setItem('pempek_wa_config', JSON.stringify({ url, instance, apiKey, autoSend }));
   },
 
+  getModalAwal() {
+    return parseFloat(localStorage.getItem('pempek_modal_awal')) || 0;
+  },
+
+  saveModalAwal(value) {
+    localStorage.setItem('pempek_modal_awal', value);
+  },
+
 
   // helper generate uuid untuk local storage
   _generateUUID() {

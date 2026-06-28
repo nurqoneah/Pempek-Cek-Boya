@@ -578,10 +578,19 @@ function renderDashboard(container, actionsContainer) {
 
   let totalIncome = 0;
   let totalExpense = 0;
+  let paidIncome = 0;
 
-  state.sales.forEach(s => totalIncome += parseFloat(s.total_price) || 0);
+  state.sales.forEach(s => {
+    const price = parseFloat(s.total_price) || 0;
+    totalIncome += price;
+    if (s.payment_status === 'paid') {
+      paidIncome += price;
+    }
+  });
   state.expenses.forEach(e => totalExpense += parseFloat(e.amount) || 0);
   const netProfit = totalIncome - totalExpense;
+  const modalAwal = window.db.getModalAwal();
+  const saldoKeuangan = paidIncome - totalExpense + modalAwal;
 
   // Calculate best selling packages/products
   const packageSales = {};
@@ -670,6 +679,17 @@ function renderDashboard(container, actionsContainer) {
         <div class="card-title">${formatIDR(netProfit)}</div>
         <div class="card-meta">
           Margin keuntungan bersih
+        </div>
+      </div>
+
+      <div class="card" style="border-color: var(--success);">
+        <div class="card-header-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+          <i data-lucide="coins"></i>
+        </div>
+        <div class="card-subtitle">Saldo Keuangan</div>
+        <div class="card-title">${formatIDR(saldoKeuangan)}</div>
+        <div class="card-meta" style="font-size: 11px;">
+          Lunas: ${formatIDR(paidIncome)} | Modal: ${formatIDR(modalAwal)}
         </div>
       </div>
 
@@ -1690,6 +1710,27 @@ function renderSettings(container, actionsContainer) {
         </form>
       </div>
 
+      <!-- Form Konfigurasi Modal Usaha -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3 class="panel-title">Pengaturan Modal Usaha</h3>
+            <p class="panel-subtitle">Konfigurasikan Modal Awal untuk kalkulasi Saldo Keuangan</p>
+          </div>
+        </div>
+        <form id="form-modal-settings">
+          <div class="form-group">
+            <label class="form-label" for="modal-awal">Modal Awal (IDR)</label>
+            <input type="number" id="modal-awal" class="form-control" placeholder="Contoh: 10000000" required value="${window.db.getModalAwal()}">
+          </div>
+          <div style="margin-top: 24px;">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              <i data-lucide="save"></i> Simpan Modal Awal
+            </button>
+          </div>
+        </form>
+      </div>
+
       <!-- Panduan Setup & Schema -->
       <div class="panel" style="grid-column: span 2;">
         <div class="panel-header">
@@ -1809,6 +1850,18 @@ ALTER TABLE expenses DISABLE ROW LEVEL SECURITY;</pre>
 
       window.db.saveWASettings(url, instance, apiKey, autoSend);
       showToast('Konfigurasi WhatsApp Evolution API berhasil disimpan!', 'success');
+      navigate('settings');
+    });
+  }
+
+  // Submit Modal Awal Form handler
+  const formModalSettings = document.getElementById('form-modal-settings');
+  if (formModalSettings) {
+    formModalSettings.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = parseFloat(document.getElementById('modal-awal').value) || 0;
+      window.db.saveModalAwal(val);
+      showToast('Modal Awal berhasil disimpan!', 'success');
       navigate('settings');
     });
   }
