@@ -1805,12 +1805,30 @@ CREATE TABLE IF NOT EXISTS expenses (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 6. Nonaktifkan RLS (Row Level Security) agar database cloud dapat diakses langsung oleh aplikasi
+-- 6. Buat Tabel Production Records
+CREATE TABLE IF NOT EXISTS production_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  date DATE NOT NULL,
+  items JSONB NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 7. Buat Tabel Package Stock
+CREATE TABLE IF NOT EXISTS package_stock (
+  package_id VARCHAR(50) PRIMARY KEY,
+  quantity INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 8. Nonaktifkan RLS (Row Level Security) agar database cloud dapat diakses langsung oleh aplikasi
 ALTER TABLE customers DISABLE ROW LEVEL SECURITY;
 ALTER TABLE packages DISABLE ROW LEVEL SECURITY;
 ALTER TABLE batches DISABLE ROW LEVEL SECURITY;
 ALTER TABLE sales DISABLE ROW LEVEL SECURITY;
-ALTER TABLE expenses DISABLE ROW LEVEL SECURITY;</pre>
+ALTER TABLE expenses DISABLE ROW LEVEL SECURITY;
+ALTER TABLE production_records DISABLE ROW LEVEL SECURITY;
+ALTER TABLE package_stock DISABLE ROW LEVEL SECURITY;</pre>
           </div>
         </div>
       </div>
