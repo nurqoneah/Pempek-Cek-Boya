@@ -3270,6 +3270,7 @@ function openSaleModal(sale = null) {
 
     document.getElementById('sale-payment-status').value = sale.payment_status || 'unpaid';
     document.getElementById('sale-delivery-status').value = sale.delivery_status || 'pending';
+    document.getElementById('sale-date').value = sale.created_at ? sale.created_at.substring(0, 10) : new Date().toISOString().substring(0, 10);
     document.getElementById('sale-notes').value = sale.notes || '';
   } else {
     titleEl.textContent = 'Tambah Pesanan Baru';
@@ -3287,6 +3288,7 @@ function openSaleModal(sale = null) {
 
     document.getElementById('sale-payment-status').value = 'unpaid';
     document.getElementById('sale-delivery-status').value = 'pending';
+    document.getElementById('sale-date').value = new Date().toISOString().substring(0, 10);
     document.getElementById('sale-notes').value = '';
   }
 
@@ -3309,6 +3311,17 @@ async function handleSaleSubmit(e) {
   const paymentStatus = document.getElementById('sale-payment-status').value;
   const deliveryStatus = document.getElementById('sale-delivery-status').value;
   const notes = document.getElementById('sale-notes').value.trim();
+  const saleDateVal = document.getElementById('sale-date').value;
+
+  const originalSale = id ? state.sales.find(s => s.id === id) : null;
+  let createdAt = originalSale ? originalSale.created_at : new Date().toISOString();
+  if (saleDateVal) {
+    const oldDatePart = createdAt.substring(0, 10);
+    if (oldDatePart !== saleDateVal) {
+      const timePart = createdAt.substring(11, 23);
+      createdAt = `${saleDateVal}T${timePart}Z`;
+    }
+  }
 
   try {
     let customerName = '';
@@ -3359,7 +3372,8 @@ async function handleSaleSubmit(e) {
       payment_status: paymentStatus,
       delivery_status: deliveryStatus,
       notes: notes,
-      items: state.currentSaleItems
+      items: state.currentSaleItems,
+      created_at: createdAt
     };
 
     if (id) {

@@ -563,7 +563,8 @@ window.db = {
   },
 
   async addSale(sale) {
-    const dateStr = new Date().toISOString().substring(2, 10).replace(/-/g, ''); // YYMMDD
+    const saleDate = sale.created_at ? new Date(sale.created_at) : new Date();
+    const dateStr = saleDate.toISOString().substring(2, 10).replace(/-/g, ''); // YYMMDD
     const prefix = `PCB-${dateStr}`;
 
     let count = 0;
@@ -598,7 +599,7 @@ window.db = {
       delivery_status: sale.delivery_status || 'pending',
       notes: sale.notes || '',
       items: sale.items || [], // Simpan array item paket
-      created_at: new Date().toISOString()
+      created_at: sale.created_at || new Date().toISOString()
     };
 
     if (this.isCloudActive()) {
