@@ -1219,7 +1219,7 @@ function renderSalesTable(sales) {
                   <button class="btn btn-success btn-icon-only" style="padding: 6px; background-color: var(--success); border-color: var(--success);" title="Kirim Struk WA" onclick="window.sendWASaleReceipt('${s.id}')">
                     <i data-lucide="message-square" style="width: 14px; height: 14px;"></i>
                   </button>
-                  <button class="btn btn-secondary btn-icon-only" style="padding: 6px;" title="Cetak Struk" onclick="navigate('receipt', { saleId: '${s.id}' })">
+                  <button class="btn btn-secondary btn-icon-only" style="padding: 6px;" title="Cetak Struk" onclick="window.navigate('receipt', { saleId: '${s.id}' })">
                     <i data-lucide="receipt" style="width: 14px; height: 14px;"></i>
                   </button>
                   <button class="btn btn-secondary btn-icon-only" style="padding: 6px;" title="Edit" onclick="window.editSale('${s.id}')">
@@ -2245,6 +2245,7 @@ function copyWhatsAppText(saleId) {
 window.sendWhatsAppMessage = sendWhatsAppMessage;
 window.sendWhatsAppReceipt = sendWhatsAppReceipt;
 window.copyWhatsAppText = copyWhatsAppText;
+window.navigate = navigate;
 
 window.checkWAConnection = async () => {
   const urlEl = document.getElementById('wa-url');
