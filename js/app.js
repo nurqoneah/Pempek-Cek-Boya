@@ -1828,7 +1828,14 @@ ALTER TABLE batches DISABLE ROW LEVEL SECURITY;
 ALTER TABLE sales DISABLE ROW LEVEL SECURITY;
 ALTER TABLE expenses DISABLE ROW LEVEL SECURITY;
 ALTER TABLE production_records DISABLE ROW LEVEL SECURITY;
-ALTER TABLE package_stock DISABLE ROW LEVEL SECURITY;</pre>
+ALTER TABLE package_stock DISABLE ROW LEVEL SECURITY;
+
+-- 9. Buat Kebijakan Publik (Permissive Policy) untuk Anonim (Cadangan Keamanan Supabase)
+DROP POLICY IF EXISTS "Allow anon all on package_stock" ON package_stock;
+CREATE POLICY "Allow anon all on package_stock" ON package_stock FOR ALL TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow anon all on production_records" ON production_records;
+CREATE POLICY "Allow anon all on production_records" ON production_records FOR ALL TO anon USING (true) WITH CHECK (true);</pre>
           </div>
         </div>
       </div>
