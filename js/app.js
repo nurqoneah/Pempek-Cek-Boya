@@ -18,6 +18,11 @@ const state = {
     customerName: 'all',
     paymentStatus: 'all',
     deliveryStatus: 'all'
+  },
+  expensesFilter: {
+    search: '',
+    category: 'all',
+    batchId: 'all'
   }
 };
 
@@ -1374,6 +1379,10 @@ function renderExpenses(container, actionsContainer) {
   btn.addEventListener('click', () => openExpenseModal());
   actionsContainer.appendChild(btn);
 
+  if (!state.expensesFilter) {
+    state.expensesFilter = { search: '', category: 'all', batchId: 'all' };
+  }
+
   let totalEx = 0;
   state.expenses.forEach(e => totalEx += parseFloat(e.amount) || 0);
 
@@ -1385,9 +1394,39 @@ function renderExpenses(container, actionsContainer) {
           <i data-lucide="receipt"></i>
         </div>
         <div class="card-subtitle">Total Pengeluaran Kumulatif</div>
-        <div class="card-title">${formatIDR(totalEx)}</div>
-        <div class="card-meta">
+        <div class="card-title" id="total-expense-amount">${formatIDR(totalEx)}</div>
+        <div class="card-meta" id="total-expense-meta">
           Jumlah total catatan: ${state.expenses.length} item
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="panel" style="margin-bottom: 20px; padding: 16px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; align-items: end;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-size:12px; margin-bottom:6px;">Cari Deskripsi/Tanggal</label>
+          <input type="text" id="expense-filter-search" class="form-control" placeholder="Cari..." value="${escapeHTML(state.expensesFilter.search || '')}" style="padding: 10px; font-size: 14px;">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-size:12px; margin-bottom:6px;">Kategori</label>
+          <select id="expense-filter-category" class="form-control" style="padding: 10px; font-size: 14px; height: auto;">
+            <option value="all" ${state.expensesFilter.category === 'all' ? 'selected' : ''}>Semua Kategori</option>
+            <option value="Bahan" ${state.expensesFilter.category === 'Bahan' ? 'selected' : ''}>Bahan Baku</option>
+            <option value="Alat & Kemasan" ${state.expensesFilter.category === 'Alat & Kemasan' ? 'selected' : ''}>Alat & Kemasan</option>
+            <option value="Operasional" ${state.expensesFilter.category === 'Operasional' ? 'selected' : ''}>Operasional</option>
+            <option value="Transportasi" ${state.expensesFilter.category === 'Transportasi' ? 'selected' : ''}>Transportasi</option>
+            <option value="Pemasaran" ${state.expensesFilter.category === 'Pemasaran' ? 'selected' : ''}>Pemasaran</option>
+            <option value="Lain-lain" ${state.expensesFilter.category === 'Lain-lain' ? 'selected' : ''}>Lain-lain</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-size:12px; margin-bottom:6px;">Batch</label>
+          <select id="expense-filter-batch" class="form-control" style="padding: 10px; font-size: 14px; height: auto;">
+            <option value="all" ${state.expensesFilter.batchId === 'all' ? 'selected' : ''}>Semua Batch</option>
+            <option value="none" ${state.expensesFilter.batchId === 'none' ? 'selected' : ''}>Tanpa Batch (Histori)</option>
+            ${state.batches.map(b => `<option value="${b.id}" ${state.expensesFilter.batchId === b.id ? 'selected' : ''}>${escapeHTML(b.name)}</option>`).join('')}
+          </select>
         </div>
       </div>
     </div>
@@ -1401,11 +1440,81 @@ function renderExpenses(container, actionsContainer) {
         </div>
       </div>
       
-      <div class="table-wrapper">
+      <div class="table-wrapper" id="expenses-table-container">
         ${renderAllExpensesTable()}
       </div>
     </div>
   `;
+
+  // Attach search/filter event listeners
+  const searchInput = document.getElementById('expense-filter-search');
+  const catSelect = document.getElementById('expense-filter-category');
+  const batchSelect = document.getElementById('expense-filter-batch');
+
+  function updateExpensesTableAndSummary() {
+    // 1. Calculate filtered total
+    const filteredExpenses = state.expenses.filter(e => {
+      if (state.expensesFilter.search) {
+        const q = state.expensesFilter.search.toLowerCase();
+        const descMatch = e.description && e.description.toLowerCase().includes(q);
+        const dateMatch = e.date && e.date.includes(q);
+        if (!descMatch && !dateMatch) return false;
+      }
+      if (state.expensesFilter.category !== 'all') {
+        const dbCat = e.category ? e.category.toLowerCase() : '';
+        const filterCat = state.expensesFilter.category.toLowerCase();
+        const matchesCategory = 
+          dbCat === filterCat ||
+          (filterCat === 'bahan' && dbCat === 'raw_material') ||
+          (filterCat === 'alat & kemasan' && dbCat === 'packaging') ||
+          (filterCat === 'operasional' && dbCat === 'operational') ||
+          (filterCat === 'pemasaran' && dbCat === 'marketing') ||
+          (filterCat === 'lain-lain' && dbCat === 'other');
+        if (!matchesCategory) return false;
+      }
+      if (state.expensesFilter.batchId === 'none') {
+        if (e.batch_id) return false;
+      } else if (state.expensesFilter.batchId !== 'all') {
+        if (e.batch_id !== state.expensesFilter.batchId) return false;
+      }
+      return true;
+    });
+
+    let totalFiltered = 0;
+    filteredExpenses.forEach(e => totalFiltered += parseFloat(e.amount) || 0);
+
+    // 2. Update dynamic overview texts
+    const totalAmountEl = document.getElementById('total-expense-amount');
+    const totalMetaEl = document.getElementById('total-expense-meta');
+    if (totalAmountEl) totalAmountEl.textContent = formatIDR(totalFiltered);
+    if (totalMetaEl) {
+      const isFiltered = state.expensesFilter.search || state.expensesFilter.category !== 'all' || state.expensesFilter.batchId !== 'all';
+      totalMetaEl.textContent = isFiltered ? 
+        `Menampilkan ${filteredExpenses.length} dari ${state.expenses.length} item terfilter` : 
+        `Jumlah total catatan: ${state.expenses.length} item`;
+    }
+
+    // 3. Update table HTML
+    const tableContainer = document.getElementById('expenses-table-container');
+    if (tableContainer) {
+      tableContainer.innerHTML = renderAllExpensesTable();
+      lucide.createIcons();
+    }
+  }
+
+  function onFilterChange() {
+    state.expensesFilter.search = searchInput ? searchInput.value : '';
+    state.expensesFilter.category = catSelect ? catSelect.value : 'all';
+    state.expensesFilter.batchId = batchSelect ? batchSelect.value : 'all';
+    updateExpensesTableAndSummary();
+  }
+
+  if (searchInput) searchInput.addEventListener('input', onFilterChange);
+  if (catSelect) catSelect.addEventListener('change', onFilterChange);
+  if (batchSelect) batchSelect.addEventListener('change', onFilterChange);
+
+  // Trigger initial update to apply default filter values correctly
+  updateExpensesTableAndSummary();
 
   window.deleteExpenseConfirm = async (expenseId) => {
     if (confirm('Apakah Anda yakin ingin menghapus catatan pengeluaran ini?')) {
@@ -1424,12 +1533,44 @@ function renderExpenses(container, actionsContainer) {
 }
 
 function renderAllExpensesTable() {
-  if (state.expenses.length === 0) {
+  if (!state.expensesFilter) {
+    state.expensesFilter = { search: '', category: 'all', batchId: 'all' };
+  }
+
+  const filteredExpenses = state.expenses.filter(e => {
+    if (state.expensesFilter.search) {
+      const q = state.expensesFilter.search.toLowerCase();
+      const descMatch = e.description && e.description.toLowerCase().includes(q);
+      const dateMatch = e.date && e.date.includes(q);
+      if (!descMatch && !dateMatch) return false;
+    }
+    if (state.expensesFilter.category !== 'all') {
+      const dbCat = e.category ? e.category.toLowerCase() : '';
+      const filterCat = state.expensesFilter.category.toLowerCase();
+      const matchesCategory = 
+        dbCat === filterCat ||
+        (filterCat === 'bahan' && dbCat === 'raw_material') ||
+        (filterCat === 'alat & kemasan' && dbCat === 'packaging') ||
+        (filterCat === 'operasional' && dbCat === 'operational') ||
+        (filterCat === 'pemasaran' && dbCat === 'marketing') ||
+        (filterCat === 'lain-lain' && dbCat === 'other');
+      if (!matchesCategory) return false;
+    }
+    if (state.expensesFilter.batchId === 'none') {
+      if (e.batch_id) return false;
+    } else if (state.expensesFilter.batchId !== 'all') {
+      if (e.batch_id !== state.expensesFilter.batchId) return false;
+    }
+    return true;
+  });
+
+  if (filteredExpenses.length === 0) {
+    const isFiltered = state.expensesFilter.search || state.expensesFilter.category !== 'all' || state.expensesFilter.batchId !== 'all';
     return `
       <div class="empty-state" style="padding: 60px 20px;">
         <i data-lucide="receipt"></i>
-        <h3>Belum Ada Pengeluaran</h3>
-        <p>Silakan klik tombol "Catat Pengeluaran" di atas untuk mencatatkan pengeluaran baru.</p>
+        <h3>${isFiltered ? 'Pengeluaran Tidak Ditemukan' : 'Belum Ada Pengeluaran'}</h3>
+        <p>${isFiltered ? 'Coba ubah atau bersihkan filter pencarian Anda.' : 'Silakan klik tombol "Catat Pengeluaran" di atas untuk mencatatkan pengeluaran baru.'}</p>
       </div>
     `;
   }
@@ -1454,7 +1595,7 @@ function renderAllExpensesTable() {
         </tr>
       </thead>
       <tbody>
-        ${state.expenses.map(e => {
+        ${filteredExpenses.map(e => {
           const catLabel = categoryLabels[e.category] || e.category;
           return `
             <tr>
@@ -1758,8 +1899,10 @@ CREATE TABLE IF NOT EXISTS customers (
   phone VARCHAR(50),
   points INTEGER DEFAULT 0,
   tier VARCHAR(50) DEFAULT 'BRONZE',
+  join_date DATE DEFAULT CURRENT_DATE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
 
 -- 2. Buat Tabel Packages
 CREATE TABLE IF NOT EXISTS packages (
