@@ -1,0 +1,26 @@
+Line 386: <div style="font-weight: 600; font-size: 13px;">${escapeHTML(nameOnly)}</div>
+Line 554: <div style="font-weight: 600;">${escapeHTML(s.customer_name)}</div>
+Line 724: <input type="text" id="filter-sales-search" class="form-control" placeholder="Nama pelanggan..." value="${escapeHTML(state.salesFilter.search)}">
+Line 885: <div style="font-weight:600;">${escapeHTML(s.customer_name)}</div>
+Line 990: <td style="font-weight: 700; color: var(--primary);">${escapeHTML(id)}</td>
+Line 991: <td style="font-weight: 600;">${escapeHTML(pkg.name)}</td>
+Line 1131: <td><span class="badge badge-secondary">${escapeHTML(catLabel)}</span></td>
+Line 1132: <td>${escapeHTML(e.description)}</td>
+Line 1251: <td style="font-weight: 700; font-family: monospace; color: var(--primary);" class="cust-id-col">${escapeHTML(c.id)}</td>
+Line 1252: <td style="font-weight: 700;" class="cust-name-col">${escapeHTML(c.name)}</td>
+Line 1253: <td style="font-size: 13px;">${c.phone ? `<a href="https://wa.me/${formatWhatsAppNumber(c.phone)}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; color: var(--accent); font-weight:600;"><i data-lucide="send" style="width:12px; height:12px;"></i> ${escapeHTML(c.phone)}</a>` : '<span style="color:var(--text-muted); font-style:italic;">Belum diisi</span>'}</td>
+Line 1263: <button class="btn btn-danger btn-icon-only" style="padding: 6px;" title="Hapus Pelanggan" onclick="window.deleteCustomerConfirm('${c.id}', '${escapeHTML(c.name)}')">
+Line 1564: <span class="item-title">${escapeHTML(nameOnly)}</span>
+Line 1617: <span class="value">${escapeHTML(sale.customer_name)}</span>
+Line 1625: <span class="value">${escapeHTML(batchName)}</span>
+Line 1666: <p style="font-size:11px; margin:0; line-height:1.4; color:#374151;">${escapeHTML(sale.notes)}</p>
+Line 1871: <option value="${b.id}" ${state.currentReportFilters.batchId === b.id ? 'selected' : ''}>${escapeHTML(b.name)}</option>
+Line 1875: <option value="${escapeHTML(c.name)}" ${state.currentReportFilters.customerName === c.name ? 'selected' : ''}>${escapeHTML(c.name)} (${c.id})</option>
+Line 2032: <td style="font-weight: 600;">${escapeHTML(batchName)}</td>
+Line 2034: <div style="font-weight: 700;">${escapeHTML(s.customer_name)}</div>
+Line 2099: <span><strong>Batch:</strong> ${escapeHTML(batchLabel)}</span>
+Line 2100: <span><strong>Pelanggan:</strong> ${escapeHTML(customerLabel)}</span>
+Line 2101: <span><strong>Status Bayar:</strong> ${escapeHTML(payLabel)}</span>
+Line 2102: <span><strong>Status Kirim:</strong> ${escapeHTML(delLabel)}</span>
+Line 2259: <td style="font-size: 12px; color: var(--text-secondary);">${escapeHTML(record.notes || '-')}</td>
+Line 2403: <div class="card-subtitle">${escapeHTML(nameOnly)}</div>

@@ -1,0 +1,58 @@
+Line 131: <!-- Modal Overlay -->
+Line 132: <div class="modal-overlay" id="modal-overlay">
+Line 133: <!-- 1. Modal Tambah/Edit Batch -->
+Line 134: <div class="modal-container" id="modal-batch" style="display: none;">
+Line 135: <div class="modal-header">
+Line 136: <h3 id="modal-batch-title">Batch Baru</h3>
+Line 137: <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+Line 142: <div class="modal-body">
+Line 148: <div class="modal-footer">
+Line 149: <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+Line 155: <!-- 2. Modal Tambah Penjualan (Order) -->
+Line 156: <div class="modal-container" id="modal-sale" style="display: none;">
+Line 157: <div class="modal-header">
+Line 158: <h3 id="modal-sale-title">Tambah Pesanan</h3>
+Line 159: <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+Line 166: <div class="modal-body">
+Line 247: <div class="modal-footer">
+Line 248: <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+Line 254: <!-- 3. Modal Tambah Pengeluaran -->
+Line 255: <div class="modal-container" id="modal-expense" style="display: none;">
+Line 256: <div class="modal-header">
+Line 257: <h3 id="modal-expense-title">Tambah Pengeluaran</h3>
+Line 258: <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+Line 264: <div class="modal-body">
+Line 299: <div class="modal-footer">
+Line 300: <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+Line 306: <!-- 4. Modal Tambah/Edit Paket -->
+Line 307: <div class="modal-container" id="modal-package" style="display: none; max-width: 600px;">
+Line 308: <div class="modal-header">
+Line 309: <h3 id="modal-package-title">Kelola Paket</h3>
+Line 310: <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+Line 316: <div class="modal-body">
+Line 379: <div class="modal-footer">
+Line 380: <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+Line 386: <!-- 5. Modal Tambah/Edit Pelanggan -->
+Line 387: <div class="modal-container" id="modal-customer" style="display: none;">
+Line 388: <div class="modal-header">
+Line 389: <h3 id="modal-customer-title">Kelola Pelanggan</h3>
+Line 390: <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+Line 397: <div class="modal-body">
+Line 416: <div class="modal-footer">
+Line 417: <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+Line 423: <!-- 6. Modal Tambah Produksi Pempek -->
+Line 424: <div class="modal-container" id="modal-production" style="display: none;">
+Line 425: <div class="modal-header">
+Line 426: <h3 id="modal-production-title">Catat Produksi Pempek</h3>
+Line 427: <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+Line 432: <div class="modal-body">
+Line 473: <div class="modal-footer">
+Line 474: <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+Line 480: <!-- 7. Modal Alokasi Stok ke Paket -->
+Line 481: <div class="modal-container" id="modal-stock-allocation" style="display: none;">
+Line 482: <div class="modal-header">
+Line 483: <h3 id="modal-stock-title">Packing Stok ke Paket</h3>
+Line 484: <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+Line 489: <div class="modal-body">
+Line 519: <div class="modal-footer">
+Line 520: <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>

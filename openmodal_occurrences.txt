@@ -1,0 +1,3 @@
+Line 2178: openModal('modal-customer');
+Line 2330: openModal('modal-production');
+Line 2503: openModal('modal-stock-allocation');

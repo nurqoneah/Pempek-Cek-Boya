@@ -1,0 +1,4 @@
+Line 966: btn.addEventListener('click', () => openPackageModal());
+Line 975: <button class="btn btn-primary" onclick="window.openPackageModal()">Tambah Paket Pertama</button>
+Line 1050: openPackageModal(id, pkg);
+Line 1074: btn.addEventListener('click', () => openExpenseModal());

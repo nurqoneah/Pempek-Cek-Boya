@@ -1,0 +1,20 @@
+Line 377: <div style="font-size: 11px; color: var(--text-secondary);">${formatIDR(item.price)} x ${item.quantity} pcs</div>
+Line 380: <span style="font-weight: 700; color: var(--accent); font-size: 13px;">${formatIDR(subtotal)}</span>
+Line 401: document.getElementById('sale-total-price-display').value = formatIDR(total);
+Line 432: <div class="card-title">${formatIDR(totalIncome)}</div>
+Line 443: <div class="card-title">${formatIDR(totalExpense)}</div>
+Line 454: <div class="card-title">${formatIDR(netProfit)}</div>
+Line 548: <td style="font-weight: 600; color: var(--accent);">${formatIDR(s.total_price)}</td>
+Line 689: <div class="value">${formatIDR(totalRevenue)}</div>
+Line 696: <div class="value" style="color: var(--success); margin-top: 4px;">${formatIDR(paidRevenue)}</div>
+Line 703: <div class="value" style="color: var(--text-warning); margin-top: 4px;">${formatIDR(unpaidRevenue)}</div>
+Line 882: <td style="font-weight: 700; color: var(--accent);">${formatIDR(s.total_price)}</td>
+Line 982: <td style="font-weight: 700; color: var(--accent);">${formatIDR(pkg.price)}</td>
+Line 1047: <div class="card-title">${formatIDR(totalEx)}</div>
+Line 1123: <td style="font-weight: 600; color: var(--danger);">${formatIDR(e.amount)}</td>
+Line 1246: <td style="font-weight: 700; color: var(--accent);">${formatIDR(c.totalSpent)}</td>
+Line 1555: <span class="item-unit-price">${formatIDR(unitPrice)}</span>
+Line 1558: <div class="col-price">${formatIDR(subtotal)}</div>
+Line 1642: <span class="total-val">${formatIDR(sale.total_price)}</span>
+Line 2028: <td style="font-weight: 700; color: var(--accent);">${formatIDR(s.total_price)}</td>
+Line 2396: <i data-lucide="tag"></i> ${formatIDR(price)} per paket

@@ -1,0 +1,3 @@
+Line 455: btn.addEventListener('click', () => openSaleModal());
+Line 693: btn.addEventListener('click', () => openSaleModal());
+Line 833: openSaleModal(saleObj);

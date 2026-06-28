@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <!-- Error banner to catch loading crashes -->
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      const div = document.createElement('div');
+      div.style = 'position:fixed;top:0;left:0;width:100%;background:rgba(255,0,0,0.95);color:white;padding:20px;z-index:99999;font-family:monospace;white-space:pre-wrap;box-sizing:border-box;border-bottom:5px solid black;text-align:left;';
+      div.innerHTML = '<strong>[Loading Error]:</strong> ' + message + '<br><small>' + source + ' : ' + lineno + ':' + colno + '</small><br><pre>' + (error ? error.stack : '') + '</pre>';
+      document.body.appendChild(div);
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      const div = document.createElement('div');
+      div.style = 'position:fixed;top:0;left:0;width:100%;background:rgba(255,0,0,0.95);color:white;padding:20px;z-index:99999;font-family:monospace;white-space:pre-wrap;box-sizing:border-box;border-bottom:5px solid black;text-align:left;';
+      const reasonStr = event.reason ? (event.reason.message || event.reason) : 'Unknown promise rejection';
+      const stackStr = (event.reason && event.reason.stack) ? event.reason.stack : '';
+      div.innerHTML = '<strong>[Promise Rejection]:</strong> ' + reasonStr + '<br><pre>' + stackStr + '</pre>';
+      document.body.appendChild(div);
+    });
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Penjualan - Pempek Cek Boya</title>
+  
+  <!-- Premium Styling -->
+  
+  <!-- CDNs for icons, charts, and database connection -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BEOcZL6l.css">
+</head>
+<body>
+
+  <!-- Fullscreen Login Screen Overlay -->
+  <div id="login-overlay" class="login-wrapper">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">
+          <img src="/assets/logo-eU_so2qc.jpg" alt="Logo Pempek Cek Boya">
+        </div>
+        <h2>Pempek Cek Boya</h2>
+        <p>Silakan pilih pengguna dan masukkan PIN</p>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label" style="text-align: center; display: block; margin-bottom: 8px;">Pilih Peran</label>
+        <div class="role-selector-group">
+          <button type="button" class="btn btn-role active" id="btn-role-kasir" onclick="window.selectRole('kasir')">Kasir</button>
+          <button type="button" class="btn btn-role" id="btn-role-admin" onclick="window.selectRole('admin')">Admin</button>
+        </div>
+      </div>
+
+      <div class="pin-display-container">
+        <div class="pin-dots">
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+        </div>
+      </div>
+
+      <div class="pin-pad-container">
+        <button class="btn btn-pin" onclick="window.pressPin('1')">1</button>
+        <button class="btn btn-pin" onclick="window.pressPin('2')">2</button>
+        <button class="btn btn-pin" onclick="window.pressPin('3')">3</button>
+        <button class="btn btn-pin" onclick="window.pressPin('4')">4</button>
+        <button class="btn btn-pin" onclick="window.pressPin('5')">5</button>
+        <button class="btn btn-pin" onclick="window.pressPin('6')">6</button>
+        <button class="btn btn-pin" onclick="window.pressPin('7')">7</button>
+        <button class="btn btn-pin" onclick="window.pressPin('8')">8</button>
+        <button class="btn btn-pin" onclick="window.pressPin('9')">9</button>
+        <button class="btn btn-pin btn-pin-clear" onclick="window.clearPin()">C</button>
+        <button class="btn btn-pin" onclick="window.pressPin('0')">0</button>
+        <button class="btn btn-pin btn-pin-ok" onclick="window.submitPin()">Ok</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container" id="main-app-container" style="display: none;">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <div class="logo-icon" style="overflow: hidden; padding: 0; background: transparent; box-shadow: none;">
+          <img src="/assets/logo-eU_so2qc.jpg" alt="Logo Pempek Cek Boya" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
+        </div>
+        <div class="logo-text">
+          <h2 style="font-size: 16px; line-height: 1.2;">Pempek Cek Boya</h2>
+          <p style="font-size: 9px; letter-spacing: 0.05em;">Enak, Bersih, Berprotein!</p>
+        </div>
+      </div>
+      
+      <nav class="nav-menu">
+        <li class="nav-item active" data-view="dashboard" id="nav-dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </li>
+        <li class="nav-item" data-view="sales" id="nav-sales">
+          <i data-lucide="shopping-bag"></i>
+          <span>Daftar Pesanan</span>
+        </li>
+        <li class="nav-item" data-view="production" id="nav-production">
+          <i data-lucide="factory"></i>
+          <span>Produksi Pempek</span>
+        </li>
+        <li class="nav-item" data-view="stock" id="nav-stock">
+          <i data-lucide="package-search"></i>
+          <span>Stok Paket</span>
+        </li>
+        <li class="nav-item" data-view="packages" id="nav-packages">
+          <i data-lucide="package"></i>
+          <span>Kelola Produk/Paket</span>
+        </li>
+        <li class="nav-item" data-view="expenses" id="nav-expenses">
+          <i data-lucide="receipt"></i>
+          <span>Catatan Pengeluaran</span>
+        </li>
+        <li class="nav-item" data-view="customers" id="nav-customers">
+          <i data-lucide="users"></i>
+          <span>Rekap Pelanggan</span>
+        </li>
+        <li class="nav-item" data-view="order-recap" id="nav-order-recap">
+          <i data-lucide="clipboard-list"></i>
+          <span>Rekap Pesanan</span>
+        </li>
+        <li class="nav-item" data-view="settings" id="nav-settings">
+          <i data-lucide="cloud"></i>
+          <span>Pengaturan Cloud</span>
+        </li>
+        <li class="nav-item logout-item" id="nav-logout" onclick="window.logout()" style="color: var(--danger); margin-top: auto; border-color: rgba(239, 68, 68, 0.1);">
+          <i data-lucide="log-out" style="stroke: var(--danger);"></i>
+          <span style="color: var(--danger); font-weight: 600;">Keluar (Logout)</span>
+        </li>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="footer-row">
+          <button class="theme-toggle-btn" id="theme-toggle-btn" title="Ganti Tema">
+            <i data-lucide="sun" id="theme-icon-sun" style="display:none;"></i>
+            <i data-lucide="moon" id="theme-icon-moon"></i>
+          </button>
+          <div class="cloud-indicator" id="cloud-status" title="Status Database Cloud">
+            <div class="indicator-dot offline" id="cloud-indicator-dot"></div>
+            <span id="cloud-status-text">Lokal</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+    
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Content Header (Sticky) -->
+      <header class="content-header">
+        <div class="header-title">
+          <h1 id="view-title">Dashboard</h1>
+          <p id="view-subtitle">Ringkasan penjualan dan operasional</p>
+        </div>
+        <div class="header-actions" id="header-actions-container">
+          <!-- Dynamic Action Buttons will be injected here -->
+        </div>
+      </header>
+      
+      <!-- Dynamic Content Body -->
+      <section class="content-body" id="content-body">
+        <!-- Rendered views will be dynamically injected here by js/app.js -->
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-loader-2 animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          <h3>Memuat Sistem...</h3>
+          <p>Mohon tunggu sebentar, sistem sedang bersiap.</p>
+        </div>
+      </section>
+      
+    </main>
+  </div>
+
+  <!-- Modal Overlay -->
+  <div class="modal-overlay" id="modal-overlay">
+    <!-- 1. Modal Tambah/Edit Batch -->
+    <div class="modal-container" id="modal-batch" style="display: none;">
+      <div class="modal-header">
+        <h3 id="modal-batch-title">Batch Baru</h3>
+        <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-batch">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="batch-name">Nama Batch</label>
+            <input type="text" id="batch-name" class="form-control" placeholder="Contoh: Batch 1 - Juni 2026" required autocomplete="off">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Batch</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 2. Modal Tambah Penjualan (Order) -->
+    <div class="modal-container" id="modal-sale" style="display: none;">
+      <div class="modal-header">
+        <h3 id="modal-sale-title">Tambah Pesanan</h3>
+        <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-sale">
+        <input type="hidden" id="sale-id">
+        <input type="hidden" id="sale-batch-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="sale-customer-select">Pilih Pelanggan</label>
+            <select id="sale-customer-select" class="form-control" required>
+              <option value="" disabled selected>Pilih Pelanggan</option>
+              <option value="new">+ Pelanggan Baru / Tulis Manual...</option>
+            </select>
+            
+            <div id="sale-customer-status-container" style="margin-top: 8px; display: none;">
+              <span class="badge" id="sale-customer-status-badge">Pelanggan Baru</span>
+            </div>
+          </div>
+          
+          <!-- Input nama pelanggan baru (hanya tampil jika memilih "+ Pelanggan Baru / Tulis Manual...") -->
+          <div class="form-group" id="group-sale-customer-name" style="display: none;">
+            <label class="form-label" for="sale-customer-name">Nama Pelanggan Baru</label>
+            <input type="text" id="sale-customer-name" class="form-control" placeholder="Masukkan nama pembeli baru" autocomplete="off">
+          </div>
+          
+          <!-- Input nomor WhatsApp pelanggan -->
+          <div class="form-group" id="group-sale-customer-phone" style="display: none;">
+            <label class="form-label" for="sale-customer-phone">Nomor WhatsApp Pelanggan</label>
+            <input type="text" id="sale-customer-phone" class="form-control" placeholder="Contoh: 081234567890">
+          </div>
+          
+          <!-- Daftar Item Paket yang Ditambahkan (Keranjang) -->
+          <div class="form-group" id="sale-items-container" style="display: none; margin-bottom: 24px;">
+            <label class="form-label" style="font-weight: 700;">Daftar Paket Pesanan Pelanggan</label>
+            <div id="sale-items-list" style="display: flex; flex-direction: column; gap: 10px; background-color: var(--bg-tertiary); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 16px; max-height: 200px; overflow-y: auto;">
+              <!-- Javascript will render selected packages here -->
+            </div>
+          </div>
+          
+          <div style="background-color: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border-glass); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+            <div class="form-label" style="font-weight: 600; margin-bottom: 12px; font-size: 13px; color: var(--primary);">+ Tambah Pilihan Paket ke Pesanan</div>
+            <div class="form-row-2" style="align-items: flex-end; gap: 12px; grid-template-columns: 2fr 1fr;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="sale-package" style="font-size: 12px;">Pilihan Paket</label>
+                <select id="sale-package" class="form-control">
+                  <option value="" disabled selected>Pilih Paket</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="sale-quantity" style="font-size: 12px;">Qty</label>
+                <input type="number" id="sale-quantity" class="form-control" min="1" value="1">
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="btn-add-item-to-sale" style="width: 100%; margin-top: 14px; padding: 8px 16px; font-size: 13px; border-color: var(--primary); color: var(--primary);">
+              <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i> Tambah ke Daftar Belanja
+            </button>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="sale-total-price-display">Total Tagihan (Otomatis)</label>
+            <input type="text" id="sale-total-price-display" class="form-control" value="Rp 0" readonly tabindex="-1" style="font-size: 18px; font-weight: 700; color: var(--accent); background-color: var(--bg-tertiary);">
+            <input type="hidden" id="sale-total-price">
+          </div>
+          
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="sale-payment-status">Status Pembayaran</label>
+              <select id="sale-payment-status" class="form-control">
+                <option value="unpaid">Belum Bayar</option>
+                <option value="paid">Lunas</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="sale-delivery-status">Status Pengiriman</label>
+              <select id="sale-delivery-status" class="form-control">
+                <option value="pending">Menunggu</option>
+                <option value="shipped">Dikirim</option>
+                <option value="delivered">Diterima</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="sale-notes">Catatan Tambahan</label>
+            <textarea id="sale-notes" class="form-control" placeholder="Contoh: Tanpa timun, cuko pedas, dll."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-sale">Simpan Pesanan</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 3. Modal Tambah Pengeluaran -->
+    <div class="modal-container" id="modal-expense" style="display: none;">
+      <div class="modal-header">
+        <h3 id="modal-expense-title">Tambah Pengeluaran</h3>
+        <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-expense">
+        <input type="hidden" id="expense-batch-id">
+        <div class="modal-body">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="expense-category">Kategori</label>
+              <select id="expense-category" class="form-control" required>
+                <option value="" disabled selected>Pilih Kategori</option>
+                <option value="raw_material">Bahan Baku (Ikan, Sagu, Gula Merah, dll.)</option>
+                <option value="packaging">Kemasan (Dus, Plastik Vacum, dll.)</option>
+                <option value="operational">Operasional (Gas, Ongkir, Listrik, dll.)</option>
+                <option value="marketing">Pemasaran (Iklan, Brosur, dll.)</option>
+                <option value="other">Lain-lain</option>
+                <option value="__custom__">+ Tambah Kategori Kustom...</option>
+              </select>
+            </div>
+            <!-- Form group input kategori kustom (hidden by default) -->
+            <div class="form-group" id="group-custom-category" style="display: none; grid-column: span 2; margin-top: 10px;">
+              <label class="form-label" for="expense-custom-category">Nama Kategori Kustom Baru</label>
+              <input type="text" id="expense-custom-category" class="form-control" placeholder="Contoh: Ongkir, Listrik, Uang Kebersihan">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="expense-date">Tanggal</label>
+              <input type="date" id="expense-date" class="form-control" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="expense-amount">Jumlah Pengeluaran (Rupiah)</label>
+            <input type="number" id="expense-amount" class="form-control" min="0" placeholder="Contoh: 150000" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="expense-description">Deskripsi Pengeluaran</label>
+            <textarea id="expense-description" class="form-control" placeholder="Contoh: Beli Ikan Tenggiri 2kg, Sagu Tani 1kg" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Pengeluaran</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 4. Modal Tambah/Edit Paket -->
+    <div class="modal-container" id="modal-package" style="display: none; max-width: 600px;">
+      <div class="modal-header">
+        <h3 id="modal-package-title">Kelola Paket</h3>
+        <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-package">
+        <input type="hidden" id="package-mode" value="add"> <!-- add atau edit -->
+        <div class="modal-body">
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" for="package-type">Jenis Menu / Produk</label>
+            <select id="package-type" class="form-control">
+              <option value="package">Paket Pempek (Mengurangi Stok Butiran)</option>
+              <option value="single">Produk Tunggal / Non-Pempek (Minuman, Kerupuk, Cuko Botol, dll.)</option>
+            </select>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="package-id-input">Kode Produk / Paket</label>
+              <input type="text" id="package-id-input" class="form-control" placeholder="Contoh: K atau EST" required autocomplete="off" maxlength="10">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="package-name">Nama Produk / Paket</label>
+              <input type="text" id="package-name" class="form-control" placeholder="Contoh: Paket K / Es Teh" required autocomplete="off">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="package-price">Harga Jual (Rp)</label>
+            <input type="number" id="package-price" class="form-control" min="0" placeholder="Contoh: 50000" required>
+          </div>
+          
+          <div id="composition-fields-section" style="margin-top: 24px;">
+            <label class="form-label" style="font-weight: 700; color: var(--text-primary); border-bottom: 1px solid var(--border-glass); padding-bottom: 8px;">Komposisi Butiran Pempek</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+              <div class="form-group">
+                <label class="form-label" for="comp-kulit">Kulit (Pcs)</label>
+                <input type="number" id="comp-kulit" class="form-control" min="0" value="0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="comp-telur">Telur (Pcs)</label>
+                <input type="number" id="comp-telur" class="form-control" min="0" value="0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="comp-lenjer-kecil">Lenjer Kecil (Pcs)</label>
+                <input type="number" id="comp-lenjer-kecil" class="form-control" min="0" value="0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="comp-lenjer-potong">Lenjer Potong (Pcs)</label>
+                <input type="number" id="comp-lenjer-potong" class="form-control" min="0" value="0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="comp-lenjer-besar">Lenjer Besar (Pcs)</label>
+                <input type="number" id="comp-lenjer-besar" class="form-control" min="0" value="0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="comp-kapal-selam">Kapal Selam (Pcs)</label>
+                <input type="number" id="comp-kapal-selam" class="form-control" min="0" value="0" required>
+              </div>
+            </div>
+            
+            <!-- Dynamic Custom Compositions Container -->
+            <div id="custom-compositions-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px; border-top: 1px dashed var(--border-glass); padding-top: 16px;">
+              <!-- Custom inputs will be added here dynamically -->
+            </div>
+            
+            <!-- Form to add new custom composition field -->
+            <div style="margin-top: 16px; background-color: rgba(255,255,255,0.02); border: 1px dashed var(--border-glass); border-radius: var(--radius-md); padding: 16px;">
+              <div class="form-label" style="font-size: 13px; font-weight: 600; color: var(--primary);">+ Tambah Kategori Butiran Kustom</div>
+              <div style="display: flex; gap: 12px; align-items: center; margin-top: 8px;">
+                <input type="text" id="new-comp-label" class="form-control" placeholder="Contoh: Pempek Belah, Pempek Panggang" style="flex: 2; padding: 10px 14px; font-size: 13px;">
+                <button type="button" class="btn btn-secondary" onclick="window.addNewCustomCompositionRow()" style="flex: 1; padding: 10px 16px; font-size: 13px; border-color: var(--primary); color: var(--primary); height: 42px;">
+                  Tambah
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-package">Simpan Paket</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 5. Modal Tambah/Edit Pelanggan -->
+    <div class="modal-container" id="modal-customer" style="display: none;">
+      <div class="modal-header">
+        <h3 id="modal-customer-title">Kelola Pelanggan</h3>
+        <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-customer">
+        <input type="hidden" id="customer-id">
+        <input type="hidden" id="customer-mode" value="add"> <!-- add atau edit -->
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="customer-name">Nama Pelanggan</label>
+            <input type="text" id="customer-name" class="form-control" placeholder="Masukkan nama pelanggan" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="customer-phone">Nomor WhatsApp</label>
+            <input type="text" id="customer-phone" class="form-control" placeholder="Contoh: 081234567890">
+          </div>
+          <div class="form-group" id="customer-member-info" style="display: none; background-color: var(--bg-tertiary); padding: 12px; border-radius: var(--radius-md); margin-top: 12px; border: 1px solid var(--border-glass);">
+            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--primary);">Data Membership</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">
+              <div><strong>ID Member:</strong> <span id="customer-member-id">-</span></div>
+              <div><strong>Tier:</strong> <span id="customer-member-tier" class="badge">Bronze</span></div>
+              <div><strong>Poin:</strong> <span id="customer-member-points">0</span></div>
+              <div><strong>Bergabung:</strong> <span id="customer-member-join-date">-</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-customer">Simpan Pelanggan</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 6. Modal Tambah Produksi Pempek -->
+    <div class="modal-container" id="modal-production" style="display: none;">
+      <div class="modal-header">
+        <h3 id="modal-production-title">Catat Produksi Pempek</h3>
+        <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-production">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="production-date">Tanggal Produksi</label>
+            <input type="date" id="production-date" class="form-control" required>
+          </div>
+          
+          <div style="background-color: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+            <label class="form-label" style="font-weight: 700; color: var(--primary); border-bottom: 1px solid var(--border-glass); padding-bottom: 8px; display: block; margin-bottom: 16px;">Jumlah Butiran yang Diproduksi</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label class="form-label" for="prod-kulit">Kulit (Pcs)</label>
+                <input type="number" id="prod-kulit" class="form-control" min="0" value="0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prod-telur">Telur (Pcs)</label>
+                <input type="number" id="prod-telur" class="form-control" min="0" value="0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prod-lenjer-kecil">Lenjer Kecil (Pcs)</label>
+                <input type="number" id="prod-lenjer-kecil" class="form-control" min="0" value="0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prod-lenjer-potong">Lenjer Potong (Pcs)</label>
+                <input type="number" id="prod-lenjer-potong" class="form-control" min="0" value="0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prod-lenjer-besar">Lenjer Besar (Pcs)</label>
+                <input type="number" id="prod-lenjer-besar" class="form-control" min="0" value="0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prod-kapal-selam">Kapal Selam (Pcs)</label>
+                <input type="number" id="prod-kapal-selam" class="form-control" min="0" value="0" required>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="production-notes">Catatan Produksi</label>
+            <textarea id="production-notes" class="form-control" placeholder="Contoh: Produksi pagi, fresh dari oven"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-production">Simpan Produksi</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 7. Modal Alokasi Stok ke Paket -->
+    <div class="modal-container" id="modal-stock-allocation" style="display: none;">
+      <div class="modal-header">
+        <h3 id="modal-stock-title">Packing Stok ke Paket</h3>
+        <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-stock-allocation">
+        <div class="modal-body">
+          <div style="background-color: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+            <label class="form-label" style="font-weight: 700; color: var(--accent); border-bottom: 1px solid var(--border-glass); padding-bottom: 8px; display: block; margin-bottom: 12px;">Stok Butiran Tersedia</label>
+            <div id="available-ingredients-display" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+              <!-- Javascript will populate this with current ingredient stock -->
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="stock-package-select">Pilih Paket</label>
+            <select id="stock-package-select" class="form-control" required>
+              <option value="" disabled selected>Pilih Jenis Paket</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="stock-quantity">Jumlah Paket yang akan Dibuat</label>
+            <input type="number" id="stock-quantity" class="form-control" min="1" value="1" required>
+            <small style="color: var(--text-secondary); font-size: 12px; margin-top: 4px; display: block;">
+              Maksimum: <span id="max-possible-packages">0</span> paket (berdasarkan stok tersedia)
+            </small>
+          </div>
+          
+          <div style="background-color: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border-glass); border-radius: var(--radius-md); padding: 16px;">
+            <label class="form-label" style="font-weight: 600; font-size: 13px; color: var(--primary);">Komposisi Paket Terpilih</label>
+            <div id="package-composition-display" style="margin-top: 12px; font-size: 13px;">
+              <!-- Javascript will show package composition here -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btn-allocate-stock">Packing Stok</button>
+        </div>
+      </form>
+    </div>
+    
+    <!-- 8. Modal Penyesuaian Stok Pempek Butiran -->
+    <div class="modal-container" id="modal-adjust-loose" style="display: none;">
+      <div class="modal-header">
+        <h3>Sesuaikan Stok Pempek Butiran</h3>
+        <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-adjust-loose">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="adjust-loose-item">Jenis Pempek Butiran</label>
+            <select id="adjust-loose-item" class="form-control" required>
+              <option value="" disabled selected>Pilih Jenis Pempek</option>
+              <option value="kulit">Kulit</option>
+              <option value="telur">Telur</option>
+              <option value="lenjer_kecil">Lenjer Kecil</option>
+              <option value="lenjer_potong">Lenjer Potong</option>
+              <option value="lenjer_besar">Lenjer Besar</option>
+              <option value="kapal_selam">Kapal Selam</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="adjust-loose-qty">Jumlah Perubahan Stok</label>
+            <input type="number" id="adjust-loose-qty" class="form-control" placeholder="Contoh: 10 atau -5" required>
+            <small style="color: var(--text-secondary); font-size: 12px; margin-top: 4px; display: block;">
+              Gunakan angka positif (+) untuk menambah stok, angka negatif (-) untuk mengurangi.
+            </small>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="adjust-loose-notes">Catatan / Alasan Penyesuaian</label>
+            <input type="text" id="adjust-loose-notes" class="form-control" placeholder="Contoh: Buang akibat rusak, bonus, dll." required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Penyesuaian</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 9. Modal Penyesuaian Stok Paket -->
+    <div class="modal-container" id="modal-adjust-package" style="display: none;">
+      <div class="modal-header">
+        <h3>Sesuaikan Stok Paket Siap Jual</h3>
+        <button class="btn btn-secondary btn-icon-only" onclick="window.closeModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="form-adjust-package">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="adjust-package-select">Pilih Jenis Paket</label>
+            <select id="adjust-package-select" class="form-control" required>
+              <option value="" disabled selected>Pilih Jenis Paket</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="adjust-package-qty">Jumlah Perubahan Stok</label>
+            <input type="number" id="adjust-package-qty" class="form-control" placeholder="Contoh: 5 atau -3" required>
+            <small style="color: var(--text-secondary); font-size: 12px; margin-top: 4px; display: block;">
+              Gunakan angka positif (+) untuk menambah stok, angka negatif (-) untuk mengurangi.
+            </small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeModal()">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Penyesuaian</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Load Main Application Logic in order -->
+  <script src="./js/data.js"></script>
+  <script src="./js/db.js"></script>
+  <script src="./js/app.js"></script>
+
+</body>
+</html>

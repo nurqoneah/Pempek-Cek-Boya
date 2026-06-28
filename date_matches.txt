@@ -1,0 +1,8 @@
+Line 570: <div style="font-size: 11px; color: var(--text-muted);">${formatDate(s.created_at)}</div>
+Line 603: const labels = last7Days.map(d => formatDate(d));
+Line 898: <td style="font-size: 12px; color: var(--text-secondary);">${formatDate(s.created_at)}</td>
+Line 1145: <td>${formatDate(e.date)}</td>
+Line 1272: <td>${c.lastOrder ? formatDate(c.lastOrder) : '-'}</td>
+Line 1636: <span class="value">${formatDate(sale.created_at)}</span>
+Line 2046: <td>${formatDate(s.created_at)}</td>
+Line 2267: <td>${formatDate(record.date)}</td>

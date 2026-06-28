@@ -1,0 +1,14 @@
+Line 398: function renderSaleModalItems() {
+Line 455: btn.addEventListener('click', () => openSaleModal());
+Line 693: btn.addEventListener('click', () => openSaleModal());
+Line 966: btn.addEventListener('click', () => openPackageModal());
+Line 1074: btn.addEventListener('click', () => openExpenseModal());
+Line 1184: btn.addEventListener('click', () => openCustomerModal());
+Line 2152: function openCustomerModal(id = null) {
+Line 2154: const titleEl = document.getElementById('modal-customer-title');
+Line 2238: btn.addEventListener('click', () => openProductionModal());
+Line 2320: function openProductionModal() {
+Line 2364: window.openProductionModal = openProductionModal;
+Line 2373: btn.addEventListener('click', () => openStockAllocationModal());
+Line 2450: async function openStockAllocationModal() {
+Line 2561: window.openStockAllocationModal = openStockAllocationModal;
