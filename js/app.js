@@ -332,6 +332,10 @@ async function refreshData() {
 
 // --- NAVIGATION & ROUTER ---
 function navigate(viewName, params = {}) {
+  // Simpan halaman sebelumnya (selain 'receipt' dan 'report-preview') untuk kemudahan navigasi balik
+  if (viewName !== 'receipt' && viewName !== 'report-preview') {
+    state.previousView = state.currentView;
+  }
   state.currentView = viewName;
   
   // Toggle layout classes based on receipt view
@@ -2224,11 +2228,8 @@ function renderReceipt(container, actionsContainer, saleId) {
 window.closeReceiptView = () => {
   // Clear the hash to go back to regular views without triggering hashchange reload
   window.history.pushState("", document.title, window.location.pathname + window.location.search);
-  if (state.currentBatchId) {
-    navigate('batch-details', { batchId: state.currentBatchId });
-  } else {
-    navigate('dashboard');
-  }
+  const backTarget = state.previousView || 'sales';
+  navigate(backTarget);
 };
 
 // --- WHATSAPP NUMBER NORMALIZATION & MESSAGE ---
@@ -2542,6 +2543,43 @@ async function generateReceiptCanvas() {
   }
 }
 
+function showReceiptImageFallback(dataUrl) {
+  let overlay = document.getElementById('modal-receipt-image-fallback');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'modal-receipt-image-fallback';
+    overlay.className = 'modal-overlay';
+    document.body.appendChild(overlay);
+  }
+  
+  overlay.innerHTML = `
+    <div class="modal-container" style="max-width: 420px; border-radius: var(--radius-lg); background: var(--bg-secondary); border: 1px solid var(--border-glass);">
+      <div class="modal-header">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--text-primary);">Gambar Struk Belanja</h3>
+        <button class="btn btn-secondary btn-icon-only" onclick="document.getElementById('modal-receipt-image-fallback').classList.remove('active')" style="padding: 4px; min-width: auto; height: auto; border: none; background: none; color: var(--text-secondary); cursor: pointer;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4; text-align: left;">
+          Sentuh dan tahan (tekan lama) pada gambar di bawah untuk <strong>Simpan/Salin/Bagikan</strong> gambar struk.
+        </p>
+        <div style="max-height: 55vh; overflow-y: auto; border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 8px; background: #ffffff; display: flex; justify-content: center;">
+          <img src="${dataUrl}" style="max-width: 100%; height: auto; display: block;" alt="Struk Pempek Cek Boya">
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 12px 20px;">
+        <button class="btn btn-secondary" onclick="document.getElementById('modal-receipt-image-fallback').classList.remove('active')" style="width: 100%;">Tutup</button>
+      </div>
+    </div>
+  `;
+  
+  // Active modal
+  setTimeout(() => {
+    overlay.classList.add('active');
+  }, 10);
+}
+
 async function downloadReceiptImage(saleId) {
   if (window.location.protocol === 'file:') {
     showToast('Fitur Gambar diblokir oleh browser pada protokol file://. Harap jalankan aplikasi menggunakan server lokal (npm run dev)!', 'danger');
@@ -2554,6 +2592,15 @@ async function downloadReceiptImage(saleId) {
   try {
     const canvas = await generateReceiptCanvas();
     const dataUrl = canvas.toDataURL('image/png');
+    
+    // Check if on tablet/mobile via user agent
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      showReceiptImageFallback(dataUrl);
+      showToast('Menampilkan gambar struk. Tekan lama untuk mengunduh.', 'success');
+      return;
+    }
+
     const link = document.createElement('a');
     link.download = `Struk_PempekCekBoya_${customerName}_${saleId.slice(0, 8)}.png`;
     link.href = dataUrl;
@@ -2569,9 +2616,18 @@ async function copyReceiptImageToClipboard(saleId) {
     showToast('Fitur Gambar diblokir oleh browser pada protokol file://. Harap jalankan aplikasi menggunakan server lokal (npm run dev)!', 'danger');
     return;
   }
-  showToast('Sedang menyalin gambar struk ke clipboard...', 'info');
+  showToast('Sedang menyalin gambar struk...', 'info');
   try {
     const canvas = await generateReceiptCanvas();
+    const dataUrl = canvas.toDataURL('image/png');
+
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      showReceiptImageFallback(dataUrl);
+      showToast('Menampilkan gambar. Tekan lama untuk menyalin/membagikan.', 'success');
+      return;
+    }
+
     canvas.toBlob(async (blob) => {
       if (!blob) {
         showToast('Gagal memproses gambar.', 'danger');
@@ -2585,7 +2641,8 @@ async function copyReceiptImageToClipboard(saleId) {
         ]);
         showToast('Gambar struk disalin ke clipboard! Silakan paste (Ctrl+V) di chat WA pelanggan.', 'success');
       } catch (err) {
-        showToast('Browser Anda tidak mendukung fitur salin gambar otomatis. Silakan unduh gambar struk terlebih dahulu.', 'warning');
+        showReceiptImageFallback(dataUrl);
+        showToast('Gagal menyalin gambar otomatis. Menampilkan gambar struk...', 'warning');
       }
     }, 'image/png');
   } catch (err) {
@@ -2614,15 +2671,28 @@ async function sendReceiptImageWhatsApp(saleId) {
     return;
   }
 
-  showToast('Sedang memproses gambar dan membuka WhatsApp...', 'info');
+  showToast('Sedang memproses gambar...', 'info');
   try {
     const canvas = await generateReceiptCanvas();
+    const dataUrl = canvas.toDataURL('image/png');
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
     canvas.toBlob(async (blob) => {
       if (!blob) {
         showToast('Gagal memproses gambar.', 'danger');
         return;
       }
       try {
+        if (isMobile) {
+          showReceiptImageFallback(dataUrl);
+          showToast('Menampilkan gambar struk. Silakan bagikan ke WhatsApp.', 'success');
+          setTimeout(() => {
+            const url = `https://wa.me/${cleanPhone}`;
+            window.open(url, '_blank');
+          }, 1500);
+          return;
+        }
+
         await navigator.clipboard.write([
           new ClipboardItem({
             'image/png': blob
@@ -2636,11 +2706,12 @@ async function sendReceiptImageWhatsApp(saleId) {
           window.open(url, '_blank');
         }, 1000);
       } catch (err) {
-        showToast('Gagal menyalin gambar ke clipboard. Membuka WhatsApp chat saja...', 'warning');
+        showReceiptImageFallback(dataUrl);
+        showToast('Browser Anda tidak mendukung salin otomatis. Membuka WhatsApp chat...', 'warning');
         setTimeout(() => {
           const url = `https://wa.me/${cleanPhone}`;
           window.open(url, '_blank');
-        }, 1000);
+        }, 1500);
       }
     }, 'image/png');
   } catch (err) {
